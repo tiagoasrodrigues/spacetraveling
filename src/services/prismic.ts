@@ -8,3 +8,5 @@ export function getPrismicClient(req?: unknown): DefaultClient {
 
   return prismic;
 }
+
+// Add prismic CMS
