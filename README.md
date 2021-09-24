@@ -1,3 +1,3 @@
 # spacetraveling
 
-This is the fifth challenge of the Reactjs track
+This is the third challenge of the Reactjs track
