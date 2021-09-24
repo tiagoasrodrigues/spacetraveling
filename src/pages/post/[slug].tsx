@@ -1,5 +1,14 @@
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-return-assign */
+/* eslint-disable react/no-danger */
 import { GetStaticPaths, GetStaticProps } from 'next';
+import { useRouter } from 'next/router';
+import Head from 'next/head';
+import Prismic from '@prismicio/client';
+import { RichText } from 'prismic-dom';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import Header from '../../components/Header';
 
 import { getPrismicClient } from '../../services/prismic';
@@ -28,48 +37,70 @@ interface PostProps {
   post: Post;
 }
 
-export default function Post({ post }: PostProps) {
-  console.log(post);
+export default function Post({ post }: PostProps): JSX.Element {
+  const totalWords = post.data.content.reduce((total, contentItem) => {
+    total += contentItem.heading.split('').length;
+
+    const words = contentItem.body.map(item => item.text.split(' ').length);
+    words.map(word => (total += word));
+    return total;
+  }, 0);
+  const readTime = Math.ceil(totalWords / 200);
+
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+
+  const formatedDate = format(
+    new Date(post.first_publication_date),
+    'dd MMM yyyy',
+    {
+      locale: ptBR,
+    }
+  );
+
   return (
     <>
+      <Head>
+        <title>{`${post.data.title} | spacetraveling`}</title>
+      </Head>
       <Header />
-      <img src="/banner.png" alt="imagem" className={styles.banner} />
+      <img src={post.data.banner.url} alt="imagem" className={styles.banner} />
       <main className={commonStyles.container}>
         <div className={styles.post}>
           <div className={styles.postTop}>
-            <h1>Rocketseat é a melhor!</h1>
+            <h1>{post.data.title}</h1>
             <ul>
               <li>
                 <FiCalendar />
-                25 mar 2021
+                {formatedDate}
               </li>
               <li>
                 <FiUser />
-                Tiago Augusto
+                {post.data.author}
               </li>
               <li>
                 <FiClock />
-                25 min
+                {`${readTime} min`}
               </li>
             </ul>
           </div>
 
-          <article>
-            <h2>Título seção</h2>
-            <p>
-              Lorem, ipsum dolor sit amet consectetur adipisicing elit.
-              <strong>Aut error praesentium et</strong>. Aut laudantium et ex
-              dignissimos culpa magni id, animi pariatur hic placeat excepturi
-              fugiat dolor sapiente praesentium{' '}
-              <a href="/">xpedita odit possimus iste vel</a> erepudiandae eaque
-              sint accusantium est! Dicta temporibus eaque consectetur, autem
-              suscipit inventore mollitia eligendi iure similique possimus
-              ipsam, sunt dolorum corrupti officia odit exercitationem quisquam
-              doloremque sed dolor voluptatem quasi? Odit debitis velit vitae
-              ratione sapiente, optio amet? Modi minus dolores eos cupiditate
-              laboriosam facere maiores.
-            </p>
-          </article>
+          {post.data.content.map(content => {
+            return (
+              <article key={content.heading}>
+                <h2>{content.heading}</h2>
+                <div
+                  className={styles.postContent}
+                  dangerouslySetInnerHTML={{
+                    __html: RichText.asHtml(content.body),
+                  }}
+                />
+              </article>
+            );
+          })}
         </div>
       </main>
     </>
@@ -77,13 +108,23 @@ export default function Post({ post }: PostProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // const prismic = getPrismicClient();
-  // const posts = await prismic.query(TODO);
+  const prismic = getPrismicClient();
+  const posts = await prismic.query([
+    Prismic.Predicates.at('document.type', 'posts'),
+  ]);
+
+  const paths = posts.results.map(post => {
+    return {
+      params: {
+        slug: post.uid,
+      },
+    };
+  });
 
   return {
-    paths: [],
+    paths,
     fallback: true,
-  }
+  };
 };
 
 export const getStaticProps: GetStaticProps = async context => {
@@ -99,7 +140,7 @@ export const getStaticProps: GetStaticProps = async context => {
       subtitle: response.data.subtitle,
       author: response.data.author,
       banner: {
-        url: response.data.banner,
+        url: response.data.banner.url,
       },
       content: response.data.content.map(content => {
         return {
