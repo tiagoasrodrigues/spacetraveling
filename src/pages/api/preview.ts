@@ -41,7 +41,12 @@ const Preview = async (req, res) => {
   }
 
   res.setPreviewData({ ref });
-  res.writeHead(302, { Location: `${redirectUrl}` });
+
+  res.write(
+    `<!DOCTYPE html><html><head><meta http-equiv="Refresh" content="0; url=${redirectUrl}" />
+      <script>window.location.href = '${redirectUrl}'</script>
+      </head>`
+  );
   res.end();
 };
 
