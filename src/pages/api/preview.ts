@@ -46,4 +46,3 @@ const Preview = async (req, res) => {
 };
 
 export default Preview;
-
