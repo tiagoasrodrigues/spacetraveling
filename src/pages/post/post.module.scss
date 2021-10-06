@@ -39,6 +39,7 @@
 }
 
 .postTop {
+  margin-bottom: 4rem;
   > h1 {
     font-size: 3rem;
     color: var(--heading);
@@ -50,20 +51,27 @@
     margin: 0;
     list-style: none;
     display: flex;
-    margin-bottom: 4rem;
+  
+    & li {
+      margin: 0;
+      font-size: 0.875rem;
+
+      & svg {
+        margin-right: 0.5rem;
+      }
+
+      & + li {
+        margin-left: 1.625rem;
+      }
+    }
   }
 
-  & li {
-    margin: 0;
+  > span {
+    margin-top: 1rem;
+    display: block;
+    font-style: italic;
     font-size: 0.875rem;
-
-    & svg {
-      margin-right: 0.5rem;
-    }
-
-    & + li {
-      margin-left: 1.625rem;
-    }
+    color: var(--info);
   }
 }
 
